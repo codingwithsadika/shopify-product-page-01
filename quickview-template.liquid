@@ -1,0 +1,208 @@
+<div id="quick-view" class="hidden-label">
+  <div class="overlay no-background"></div>
+  <div class="content product-single">
+    <div class="row">
+      <div class="col-xs-6">
+        <div class="product-media thumbnai-left">
+          <div class="featured-image product-single-photos pull-left"></div>
+          <div class="swiper-container more-views" data-margin="10" data-items="4" data-direction="vertical" >
+            <div class="swiper-wrapper">
+
+            </div>   
+          </div>
+
+        </div>
+      </div> 
+
+      <div class="col-xs-6">
+        <div class="product-shop product-info-main">
+          <div class="product-item">
+            <h2 class="product-name"><a></a></h2>
+            
+            {% if settings.product_review %}
+            <div class="review">
+              <span class="spr-badge">
+                <span class="spr-starrating spr-badge-starrating">
+                  <i style="" class="spr-icon spr-icon-star-empty"></i>
+                  <i style="" class="spr-icon spr-icon-star-empty"></i>
+                  <i style="" class="spr-icon spr-icon-star-empty"></i>
+                  <i style="" class="spr-icon spr-icon-star-empty"></i>
+                  <i style="" class="spr-icon spr-icon-star-empty"></i>
+                </span>
+                <span class="spr-starrating spr-badge-starrating spr-active">
+                  <i style="" class="spr-icon spr-icon-star"></i>
+                  <i style="" class="spr-icon spr-icon-star"></i>
+                  <i style="" class="spr-icon spr-icon-star"></i>
+                  <i style="" class="spr-icon spr-icon-star"></i>
+                  <i style="" class="spr-icon spr-icon-star"></i>
+                </span>
+              </span>
+              <span class="spr-badge-caption"></span>
+            </div>
+            {% endif %}
+            
+            <div class="details clearfix">
+              <form action="/cart/add" method="post" class="variants">
+                <div class="prices">                  
+                  <span class="price"></span>
+                  <span class="compare-price"></span> 
+                </div>
+                <p class="des description"></p>    
+                <select name='id' style="display:none"></select>
+
+                <div class="product-actions">
+                  <div class="product-quantity">
+                    <label for="quantity">{{ 'products.product.quantity' | t }}</label>
+                    <input type="number" min="0" name="quantity" value="1" class="quantity">
+
+                    <div class="total-price">
+                      <span></span>
+                    </div>
+                  </div>
+
+                  <div class="actions">
+                    <button type="button" class="btn btn-addToCart btn-primary">{{ 'products.product.add_to_cart' | t }}</button>                  
+                  </div>
+                </div>
+
+              </form>
+            </div>
+
+            {% comment %}
+            <div class="product-sharing">
+              {% include 'share' with product %}
+            </div>
+            {% endcomment %}
+
+          </div>
+        </div>
+      </div>
+      <a href="javascript:void(0)" class="close-window"><i class="fa fa-times-circle"></i></a> 
+    </div>
+  </div>
+</div>
+
+
+<script> 
+  
+  function updatePricing() {
+    var regex = /([0-9]+[.|,][0-9]+[.|,][0-9]+)/g;
+    var unitPriceTextMatch = $('.quickview-product .price').text().match(regex);
+
+    if (!unitPriceTextMatch) {
+      regex = /([0-9]+[.|,][0-9]+)/g;
+      unitPriceTextMatch = $('.quickview-product .price').text().match(regex);
+    }
+
+    if (unitPriceTextMatch) {
+
+      var unitPriceText = unitPriceTextMatch[0];
+      var unitPrice = unitPriceText.replace(/[.|,]/g, '');
+      var quantity = parseInt($('.quickview-product input[name=quantity]').val());
+      var totalPrice = unitPrice * quantity;
+
+      var totalPriceText = Shopify.formatMoney(totalPrice, window.money_format);
+      regex = /([0-9]+[.|,][0-9]+[.|,][0-9]+)/g;     
+      if (!totalPriceText.match(regex)) {
+        regex = /([0-9]+[.|,][0-9]+)/g;
+      } 
+      totalPriceText = totalPriceText.match(regex)[0];
+
+      var regInput = new RegExp(unitPriceText, "g");
+      var totalPriceHtml = $('.quickview-product .price').html().replace(regInput, totalPriceText);
+
+      $('.quickview-product .total-price span').html(totalPriceHtml);
+    }
+  };
+
+
+  Shopify.doNotTriggerClickOnThumb = false; 
+
+  var selectCallbackQuickview = function(variant, selector) {
+
+    var productItem = jQuery('.quick-view .product-item');
+    addToCart = productItem.find('.btn-addTocart'),
+      productPrice = productItem.find('.price'),
+      comparePrice = productItem.find('.compare-price'),
+      totalPrice = productItem.find('.total-price span');           
+
+    if (variant) {
+      if (variant.available) {   
+        addToCart.removeClass('disabled').removeAttr('disabled').text('{{ 'products.product.add_to_cart' | t }}');
+                                                                      } else {
+                                                                      addToCart.val('sold_out').addClass('disabled').attr('disabled', 'disabled');
+      }
+
+      productPrice.html(Shopify.formatMoney(variant.price, '{{ shop.money_format }}'));
+                                            if ( variant.compare_at_price > variant.price ) {
+                        comparePrice.html(Shopify.formatMoney(variant.compare_at_price, '{{ shop.money_format }}'))
+                        .show();
+      productPrice.addClass('on-sale');
+    } else {
+      comparePrice.hide(); 
+      productPrice.removeClass('on-sale');
+    }
+
+    var form = jQuery('#' + selector.domIdPrefix).closest('form');
+    for (var i=0,length=variant.options.length; i<length; i++) {
+      var radioButton = form.find('.swatch[data-option-index="' + i + '"] :radio[value="' + variant.options[i] +'"]');
+      if (radioButton.size()) {
+        radioButton.get(0).checked = true;
+      }
+    }
+
+
+    var inventoryInfo = productItem.find('.product-inventory span');
+    if (variant.available) {
+      if (variant.inventory_management!=null) {
+        inventoryInfo.text(variant.inventory_quantity + " " + 'in_stock');
+      } else {
+        inventoryInfo.text('many_in_stock');
+      }
+    } else {
+      inventoryInfo.text('out_of_stock');
+    }
+
+
+    
+    var moneyFormat = '{{ shop.money_format }}';
+    // Selectors
+    var $pPrice = $('.quickview-product .prices .price'),
+        $cPrice = $('.quickview-product .prices .compare-price');
+
+    // Regardless of stock, update the product price
+    $pPrice.html( Shopify.formatMoney(variant.price, moneyFormat));
+
+    // Also update and show the product's compare price if necessary
+    if (variant.compare_at_price > variant.price) {
+      $cPrice.html(Shopify.formatMoney(variant.compare_at_price, moneyFormat))
+      .show();
+    } else {
+      $cPrice.hide();
+    };
+    
+    updatePricing();
+    
+    if (window.show_multiple_currencies) {       
+      Currency.convertAll(window.shop_currency, jQuery('.currency-picker').val(),'.quickview-product .prices .price .money', '{{settings.currency_format}}');   
+      Currency.convertAll(window.shop_currency, jQuery('.currency-picker').val(),'.quickview-product .total-price .money', '{{settings.currency_format}}');
+    };
+
+
+    if (variant && variant.featured_image) {
+        var newImage = Shopify.resizeImage(variant.featured_image.src, 'small');
+        newImage = newImage.replace(/https?:/,'');
+        jQuery('.quick-view .quickview-more-views img').each(function() {
+          var grandSize = jQuery(this).attr('src');
+          if (grandSize == newImage) {
+            jQuery(this).parent().trigger('click');              
+            return false;
+          }
+        });
+      }
+
+    } else {
+      addToCart.text('unavailable').addClass('disabled').attr('disabled', 'disabled');
+    }
+  };
+</script>

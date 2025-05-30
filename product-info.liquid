@@ -1,0 +1,55 @@
+<div class="collateral e-tabs tab-wrap">
+  <ul class="tabs tabs-title">
+    
+    {% if settings.tab_description %}
+    <li class="tab-link" data-tab="tab-1">{% if settings.tab_description_title != "" %}{{settings.tab_description_title}}{% else %}{{ 'products.general.tab_description_title' | t }}{% endif %}</li>
+    {% endif %}
+        
+    {% if settings.tab_review %}
+    <li class="tab-link" data-tab="tab-2">{% if settings.tab_review_title != "" %}{{settings.tab_review_title}}{% else %}{{ 'products.general.tab_review_title' | t }}{% endif %}</li>
+    {% endif %}
+    
+    {% if settings.tab_custom %}
+    <li class="tab-link" data-tab="tab-3">{{ settings.tab_custom_title }}</li> 
+    {% endif %}
+  </ul>
+
+  {% if settings.tab_description %}
+  <div id="tab-1" class="tab-content">
+    <div class="description">
+      {{product.description}} 
+    </div>
+  </div>
+  {% endif %}
+
+  {% if settings.tab_review %}
+  <div id="tab-2" class="tab-content">
+    <div id="shopify-product-reviews" data-id="{{product.id}}">{{ product.metafields.spr.reviews }}</div>
+  </div>
+  {% endif %}
+
+  {% if settings.tab_custom %}
+  <div id="tab-3" class="tab-content"> 
+
+    {% if settings.product_customtab_img %}          
+    <div class="f-box">
+      {{ 'customtab_img.jpg' | asset_url | img_tag }}
+    </div>
+    {% endif %}
+
+    {% if settings.product_customtab_html != "" %}          
+    <div class="f-box des">       
+      {{ settings.product_customtab_html }}
+    </div>
+    {% endif %}
+
+    {% if settings.product_customtab_custompage != "" %}      
+    <div class="f-box">    
+      {{ pages[settings.product_customtab_custompage].content }}      
+    </div>
+    {% endif %}
+
+  </div>
+  {% endif %}
+
+</div>
